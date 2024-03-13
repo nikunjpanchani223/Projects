@@ -34,27 +34,54 @@ try {
         throw new Exception('Missing required parameters: table');
     }
 
-    // Check if 'conditions' parameter exists in the request data
-    if (!isset($requestData['conditions'])) {
-        throw new Exception('Missing required parameters: conditions');
+    // Check if 'select' parameter exists in the request data
+    if (!isset($requestData['select'])) {
+        throw new Exception('Missing required parameters: select');
     }
 
-    // Prepare SQL query for deletion
+    // Prepare SQL query for selection
     $table = $requestData['table'];
-    $conditions = buildWhereClause($requestData['conditions']);
+    $select = implode(',', $requestData['select']);
+    $join = '';
+    if (isset($requestData['join'])) {
+        foreach ($requestData['join'] as $joinClause) {
+            $joinTable = $joinClause['table'];
+            $joinOn = $joinClause['on'];
+            $joinType = strtoupper($joinClause['type']);
+            $join .= " $joinType JOIN $joinTable ON $joinOn[0] = $joinOn[1]";
+        }
+    }
 
-    $sql = "DELETE FROM $table $conditions";
+    // Check if both conditions passed, build where conditions
+    $conditions = isset($requestData['conditions']) ? buildWhereClause($requestData['conditions']) : '';
+    $rawConditions = isset($requestData['rawConditions']) ? implode(' ', $requestData['rawConditions']) : '';
 
-    // Execute the SQL query
+    // Check if both conditions and rawConditions are passed in the request
+    if ($conditions && $rawConditions) {
+        throw new Exception('You cannot pass both conditions or rawConditions in the request, use only one of them');
+    }
+
+    // Check if limit and order passed in the request or not
+    $limit = isset($requestData['limit']) ? 'LIMIT ' . $requestData['limit'] : '';
+    $order = isset($requestData['order']) ? 'ORDER BY ' . $requestData['order']['on'] . ' ' . strtoupper($requestData['order']['type']) : '';
+
+    $sql = "SELECT $select FROM $table $join $conditions $rawConditions $order $limit";
+
+    // Execute the query
     $result = $conn->query($sql);
 
     // If query executed successfully, commit transaction and return success response
     if ($result) {
+        // Fetch and return the data as JSON
+        $data = $result->fetch_all(MYSQLI_ASSOC);
+        http_response_code(200); // OK
+        echo json_encode(['status' => 'success', 'data' => $data]);
+
+        // Commit the transaction if everything is successful
         $conn->commit();
-        http_response_code(200);
-        echo json_encode(['status' => 'success', 'message' => 'Data deleted successfully']);
     } else {
-        throw new Exception('Delete query failed');
+        // If query failed, throw an exception
+        throw new Exception('Query failed');
     }
 } catch (Exception $e) {
     // Rollback the transaction on any exception

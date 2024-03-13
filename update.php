@@ -34,16 +34,36 @@ try {
         throw new Exception('Missing required parameters: table');
     }
 
+    // Check if 'data' parameter exists in the request data
+    if (!isset($requestData['data'])) {
+        throw new Exception('Missing required parameters: data');
+    }
+
     // Check if 'conditions' parameter exists in the request data
     if (!isset($requestData['conditions'])) {
         throw new Exception('Missing required parameters: conditions');
     }
 
-    // Prepare SQL query for deletion
-    $table = $requestData['table'];
-    $conditions = buildWhereClause($requestData['conditions']);
+    // Perform validation if 'validation' parameter exists in the request data
+    if (isset($requestData['validation'])) {
+        $validationResult = validateData($requestData['data'][0], $requestData['validation'][0], $conn, $requestData['table']);
+        if ($validationResult !== null) {
+            throw new Exception($validationResult);
+        }
+    }
 
-    $sql = "DELETE FROM $table $conditions";
+    // Prepare SQL query for insertion
+    $table = $requestData['table'];
+    $dataToUpdate = $requestData['data'][0];
+    $conditions = isset($requestData['conditions']) ? buildWhereClause($requestData['conditions']) : '';
+
+    $values = [];
+    foreach ($dataToUpdate as $column => $value) {
+        $values[] = "$column = '$value'";
+    }
+    $setValues = implode(', ', $values);
+
+    $sql = "UPDATE $table SET $setValues $conditions";
 
     // Execute the SQL query
     $result = $conn->query($sql);
@@ -51,17 +71,18 @@ try {
     // If query executed successfully, commit transaction and return success response
     if ($result) {
         $conn->commit();
-        http_response_code(200);
-        echo json_encode(['status' => 'success', 'message' => 'Data deleted successfully']);
+        http_response_code(201);
+        echo json_encode(['status' => 'success', 'message' => 'Data updated successfully', 's' => $sql]);
     } else {
-        throw new Exception('Delete query failed');
+        // If query failed, throw an exception
+        throw new Exception('Query failed');
     }
 } catch (Exception $e) {
-    // Rollback the transaction on any exception
+    // Rollback transaction in case of exception and return error response
     $conn->rollback();
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 } finally {
-    // Close the database connection
+    // Close database connection
     $conn->close();
 }
