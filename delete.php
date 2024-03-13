@@ -1,12 +1,22 @@
-<?php
-// Include the database connection file
-require_once("dbConnection.php");
+<?php session_start(); ?>
 
-// Get id parameter value from URL
+<?php
+if(!isset($_SESSION['valid'])) {
+	header('Location: login.php');
+}
+?>
+
+<?php
+//including the database connection file
+include("connection.php");
+
+//getting id of the data from url
 $id = $_GET['id'];
 
-// Delete row from the database table
-$result = mysqli_query($mysqli, "DELETE FROM users WHERE id = $id");
+//deleting the row from table
+$result=mysqli_query($mysqli, "DELETE FROM products WHERE id=$id");
 
-// Redirect to the main display page (index.php in our case)
-header("Location:index.php");
+//redirecting to the display page (view.php in our case)
+header("Location:view.php");
+?>
+
