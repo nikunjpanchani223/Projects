@@ -1,15 +1,22 @@
 <?php
+/*
+  This file contains the configuration for connecting to the database.
+  It assumes MySQL is being used with the user "root" and an empty password.
+*/
 
-/**
- * mysql_connect is deprecated
- * using mysqli_connect instead
- */
+// Database connection parameters
+define('DB_SERVER', 'YOUR_HOSTNAME');
+define('DB_USERNAME', 'YOUR_USERNAME');
+define('DB_PASSWORD', 'YOUR_PASSWORD');
+define('DB_NAME', 'YOUR_DATABASE');
 
-$databaseHost = 'localhost';
-$databaseName = 'crud_with_login';
-$databaseUsername = 'anuj';
-$databasePassword = '123456';
+// Try connecting to the Database
+$conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
-$mysqli = mysqli_connect($databaseHost, $databaseUsername, $databasePassword, $databaseName); 
-	
-?>
+// Get the current datetime in the 'Asia/Kolkata' timezone
+date_default_timezone_set('Asia/Kolkata');
+
+// Check the connection
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
