@@ -1,39 +1,32 @@
-<?php
-// Include the database connection file
-require_once("dbConnection.php");
-
-// Fetch data in descending order (lastest entry first)
-$result = mysqli_query($mysqli, "SELECT * FROM users ORDER BY id DESC");
-?>
-
+<?php session_start(); ?>
 <html>
-<head>	
+<head>
 	<title>Homepage</title>
+	<link href="style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
-	<h2>Homepage</h2>
-	<p>
-		<a href="add.php">Add New Data</a>
-	</p>
-	<table width='80%' border=0>
-		<tr bgcolor='#DDDDDD'>
-			<td><strong>Name</strong></td>
-			<td><strong>Age</strong></td>
-			<td><strong>Email</strong></td>
-			<td><strong>Action</strong></td>
-		</tr>
-		<?php
-		// Fetch the next row of a result set as an associative array
-		while ($res = mysqli_fetch_assoc($result)) {
-			echo "<tr>";
-			echo "<td>".$res['name']."</td>";
-			echo "<td>".$res['age']."</td>";
-			echo "<td>".$res['email']."</td>";	
-			echo "<td><a href=\"edit.php?id=$res[id]\">Edit</a> | 
-			<a href=\"delete.php?id=$res[id]\" onClick=\"return confirm('Are you sure you want to delete?')\">Delete</a></td>";
-		}
-		?>
-	</table>
+	<div id="header">
+		Welcome to my page!
+	</div>
+	<?php
+	if(isset($_SESSION['valid'])) {			
+		include("connection.php");					
+		$result = mysqli_query($mysqli, "SELECT * FROM login");
+	?>
+				
+		Welcome <?php echo $_SESSION['name'] ?> ! <a href='logout.php'>Logout</a><br/>
+		<br/>
+		<a href='view.php'>View and Add Products</a>
+		<br/><br/>
+	<?php	
+	} else {
+		echo "You must be logged in to view this page.<br/><br/>";
+		echo "<a href='login.php'>Login</a> | <a href='register.php'>Register</a>";
+	}
+	?>
+	<div id="footer">
+		Created by <a href="http://blog.chapagain.com.np" title="Mukesh Chapagain">Mukesh Chapagain</a>
+	</div>
 </body>
 </html>

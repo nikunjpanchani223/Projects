@@ -1,19 +1,59 @@
-<?php
-// Include the database connection file
-require_once("dbConnection.php");
+<?php session_start(); ?>
 
-// Get id from URL parameter
+<?php
+if(!isset($_SESSION['valid'])) {
+	header('Location: login.php');
+}
+?>
+
+<?php
+// including the database connection file
+include_once("connection.php");
+
+if(isset($_POST['update']))
+{	
+	$id = $_POST['id'];
+	
+	$name = $_POST['name'];
+	$qty = $_POST['qty'];
+	$price = $_POST['price'];	
+	
+	// checking empty fields
+	if(empty($name) || empty($qty) || empty($price)) {
+				
+		if(empty($name)) {
+			echo "<font color='red'>Name field is empty.</font><br/>";
+		}
+		
+		if(empty($qty)) {
+			echo "<font color='red'>Quantity field is empty.</font><br/>";
+		}
+		
+		if(empty($price)) {
+			echo "<font color='red'>Price field is empty.</font><br/>";
+		}		
+	} else {	
+		//updating the table
+		$result = mysqli_query($mysqli, "UPDATE products SET name='$name', qty='$qty', price='$price' WHERE id=$id");
+		
+		//redirectig to the display page. In our case, it is view.php
+		header("Location: view.php");
+	}
+}
+?>
+<?php
+//getting id from url
 $id = $_GET['id'];
 
-// Select data associated with this particular id
-$result = mysqli_query($mysqli, "SELECT * FROM users WHERE id = $id");
+//selecting data associated with this particular id
+$result = mysqli_query($mysqli, "SELECT * FROM products WHERE id=$id");
 
-// Fetch the next row of a result set as an associative array
-$resultData = mysqli_fetch_assoc($result);
-
-$name = $resultData['name'];
-$age = $resultData['age'];
-$email = $resultData['email'];
+while($res = mysqli_fetch_array($result))
+{
+	$name = $res['name'];
+	$qty = $res['qty'];
+	$price = $res['price'];
+}
 ?>
 <html>
 <head>	
@@ -21,27 +61,25 @@ $email = $resultData['email'];
 </head>
 
 <body>
-    <h2>Edit Data</h2>
-    <p>
-	    <a href="index.php">Home</a>
-    </p>
+	<a href="index.php">Home</a> | <a href="view.php">View Products</a> | <a href="logout.php">Logout</a>
+	<br/><br/>
 	
-	<form name="edit" method="post" action="editAction.php">
+	<form name="form1" method="post" action="edit.php">
 		<table border="0">
 			<tr> 
 				<td>Name</td>
-				<td><input type="text" name="name" value="<?php echo $name; ?>"></td>
+				<td><input type="text" name="name" value="<?php echo $name;?>"></td>
 			</tr>
 			<tr> 
-				<td>Age</td>
-				<td><input type="text" name="age" value="<?php echo $age; ?>"></td>
+				<td>Quantity</td>
+				<td><input type="text" name="qty" value="<?php echo $qty;?>"></td>
 			</tr>
 			<tr> 
-				<td>Email</td>
-				<td><input type="text" name="email" value="<?php echo $email; ?>"></td>
+				<td>Price</td>
+				<td><input type="text" name="price" value="<?php echo $price;?>"></td>
 			</tr>
 			<tr>
-				<td><input type="hidden" name="id" value=<?php echo $id; ?>></td>
+				<td><input type="hidden" name="id" value=<?php echo $_GET['id'];?>></td>
 				<td><input type="submit" name="update" value="Update"></td>
 			</tr>
 		</table>
